@@ -10,35 +10,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Bước 1: Checkout code từ repository
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Bước 2: Thiết lập Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '18'
 
+      # Bước 3: Cài đặt dependencies
       - name: Install dependencies
         run: npm install
 
+      # Bước 4: Build dự án
       - name: Build project
         run: CI=false npm run build
 
+      # Bước 5: Cài đặt Heroku CLI
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
 
+      # Bước 6: Xác thực với Heroku bằng API Key
       - name: Authenticate with Heroku
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: echo $HEROKU_API_KEY | heroku auth:token
 
+      # Bước 7: Triển khai lên Heroku
       - name: Deploy to Heroku
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
         run: |
+          # Kết nối Heroku remote
           heroku git:remote -a $HEROKU_APP_NAME
-          git config --global user.email tuanmaiyeunguoido@gmail.com
-          git config --global user.name HoangTuan2112
-          git push heroku HEAD:main -f
+
+          # Cấu hình Git user (bắt buộc để tránh lỗi)
+          git config --global user.email "tuanmaiyeunguoido@gmail.com"
+          git config --global user.name "HoangTuan2112"
+
+          # Thiết lập URL remote với API Key để xác thực
+          git remote set-url heroku https://heroku:${{ secrets.HEROKU_API_KEY }}@git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git
           
+          # Đẩy code lên Heroku
+          git push heroku HEAD:main -f
+
+      # Bước 8: Xác minh quá trình deploy
+      - name: Verify deployment
+        run: heroku logs --app ${{ secrets.HEROKU_APP_NAME }} --tail
