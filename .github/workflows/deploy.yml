@@ -10,9 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Bước 1: Checkout code từ repository
+      # Bước 1: Checkout code (tắt chế độ shallow clone)
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Lấy toàn bộ lịch sử commit
 
       # Bước 2: Thiết lập Node.js
       - name: Set up Node.js
